@@ -1,54 +1,69 @@
-# Pasta
+<div align="center">
+  <img src="Assets/PastaIcon.png" width="112" alt="Pasta 应用图标">
 
-<img src="Assets/PastaIcon.png" width="128" alt="Pasta 图标">
+  <h1>Pasta</h1>
+  <p><strong>把照片和视频带到外置 NTFS 硬盘。</strong><br>
+  选好文件和目标盘，Pasta 保留目录结构，写入后逐个读回校验。</p>
 
-一个面向 Apple Silicon Mac 的 **NTFS 文件导入工具**。选择来源文件或文件夹及外置 NTFS 分区，Pasta 完成预检、卸载、导入和逐文件 SHA-256 读回校验。
+  <p><kbd>macOS 15+</kbd> &nbsp; <kbd>Apple Silicon</kbd> &nbsp; <kbd>0.2.1</kbd></p>
+  <p><a href="https://github.com/C0-rrect/Pasta/releases/download/v0.2.1/Pasta-0.2.1-macOS-arm64.zip"><strong>下载 Pasta</strong></a> · <a href="#安装">安装</a> · <a href="#使用">使用</a> · <a href="https://github.com/C0-rrect/Pasta/releases/tag/v0.2.1">版本说明</a></p>
+</div>
 
-当前版本 **0.2.1**，构建目标 macOS 15.0，已在 macOS 15.8.2 上验证。这是个人工具，不是系统级 NTFS 驱动，也不依赖 macFUSE。
+<p align="center">
+  <img src="docs/screenshots/import.png" width="760" alt="Pasta 主窗口：已选择示例 NTFS 备份盘、示例照片和视频文件夹，显示文件数量和总大小">
+  <br><sub>导入准备 · 示例数据。开始前可确认目标盘、文件数量和总大小。</sub>
+</p>
 
-## 工作方式
+## 功能
 
-- 校验目标分区 UUID、外置设备属性、文件系统和可写介质，拒绝内部磁盘及整盘设备。
-- 来源保留原样；同名且内容不同的目标文件会被拒绝，不自动覆盖。
-- 写入前执行 NTFS 安全预检；导入后逐文件进行 SHA-256 读回校验。
-- 管理员辅助程序只在用户批准的操作中运行，不安装持久服务。
+| 功能 | Pasta 会怎么做 |
+| --- | --- |
+| **批量导入** | 一次选择多个文件或文件夹，保留子目录和来源文件。 |
+| **目标盘预检** | 核对分区身份、NTFS 格式、设备属性及可用空间，拒绝内部磁盘和整盘设备。 |
+| **保护已有文件** | 同名文件只有内容完全一致时才跳过；内容不同时停止导入。 |
+| **读回验证** | 写入后逐个读回并校验 SHA-256，完成后可在 Finder 打开硬盘或安全推出。 |
 
-写入真实磁盘仍应以已有重要数据备份为前提。请勿把此工具当作文件系统修复或格式化程序。
+Pasta 面向外置 NTFS 盘的文件导入，无需安装 macFUSE。
 
-## 构建
+## 安装
 
-需要 Apple Silicon Mac、macOS 15 或更高版本、Apple Command Line Tools 及 Python 3：
+需要 **Apple Silicon Mac 和 macOS 15 或以上**。此版本在 macOS 15.8.2 上验证。
+
+1. [下载 ZIP 安装包](https://github.com/C0-rrect/Pasta/releases/download/v0.2.1/Pasta-0.2.1-macOS-arm64.zip)，解压。
+2. 把 **Pasta.app** 拖到「应用程序」，再打开。
+3. 下载包使用本机临时代码签名，未经过 Apple 公证。如果 macOS 阻止启动，可以按下文从源码构建。
+
+[发布页与 SHA-256 校验文件](https://github.com/C0-rrect/Pasta/releases/tag/v0.2.1)
+
+## 使用
+
+1. **连接目标硬盘。** 让外置 NTFS 分区先出现在 Finder，再在 Pasta 的「导入到」下拉框中选择它；没出现时点击「刷新」。
+2. **添加来源。** 点击「选择文件或文件夹」，选好后核对文件数量、总大小和目标盘。所选内容会导入硬盘根目录，保留子目录。
+3. **开始导入。** 点击「开始导入」，在 macOS 提示时批准管理员验证。硬盘会暂时从 Finder 消失；在应用报告完成前保持连接。
+4. **检查结果。** 写入与校验完成后，可点击「打开硬盘」检查文件，再点击「安全推出」。
+
+真实磁盘写入前，请保留重要文件的备份。
+
+<details>
+<summary><strong>从源码构建与验证</strong></summary>
+
+安装 Apple Command Line Tools 与 Python 3，克隆后运行：
 
 ```sh
-xcode-select --install
+git clone https://github.com/C0-rrect/Pasta.git
+cd Pasta
 python3 build.py --clean
 ```
 
-输出：`dist/Pasta.app`。应用、管理员辅助程序、NTFS 库和预检程序均从仓库内源码构建。
-没有外部驱动依赖，不复用其他 macOS 版本的旧二进制。
-
-应用下载见本仓库 **Releases**。构建使用本机临时代码签名，没有 Developer ID 公证，macOS 可能阻止直接打开下载的应用；可从源码自行构建。
-
-## 验证
+输出为 `dist/Pasta.app`。应用、管理员辅助程序、NTFS 库和预检工具均从仓库中的源码构建。
 
 ```sh
 python3 Tests/compatibility_checks.py
-```
-
-检查 macOS 最低版本、架构、依赖、签名、辅助程序参数拒绝，以及磁盘选择和路径规则。
-
-完整导入测试可另外运行：
-
-```sh
 python3 Tests/import_checks.py
 ```
 
-它只访问新建的普通 NTFS 镜像文件，不访问实体磁盘；包含中文、emoji、嵌套目录、空文件、冲突拒绝及超过 4 GiB 文件的读回校验。大文件测试会临时占用较多存储空间，测试输出会给出临时目录位置。
+导入测试只操作新建的 NTFS 镜像文件，覆盖中文、emoji、重名冲突和超过 4 GiB 的文件。大文件测试会临时占用较多存储空间。
 
-公开仓库只包含应用所需实现与通用测试。绑定旧电脑路径、特定磁盘 UUID 的历史诊断/恢复脚本没有纳入。
+NTFS-3G 的源码、作者与许可位于 `vendor/ntfs-3g-2026.9.28`。导入引擎按源码声明使用 GPL-2.0-or-later，详见 [第三方依赖与许可](THIRD_PARTY.md)。
 
-## 依赖和许可
-
-NTFS-3G 的完整依赖源码、作者信息及许可证保留在 `vendor/ntfs-3g-2026.9.28`。
-本项目导入引擎 `Sources/import_engine.c` 已声明 **GPL-2.0-or-later**；依赖及预检工具遵循各文件的原有许可。
-参见 [COPYING.NTFS-3G](COPYING.NTFS-3G) 和 [THIRD_PARTY.md](THIRD_PARTY.md)。
+</details>
